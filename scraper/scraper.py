@@ -5,11 +5,17 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time 
+import sys
 
 service = Service('/usr/local/bin/chromedriver')  
 driver = webdriver.Chrome(service=service)
 driver.get("https://www.bistek.com.br/mercearia")
 
+current_element = driver.find_element(By.XPATH, "//li[contains(@class, 'bistek-custom-apps-0-x-paginationItem--ellipsis')]")
+last_page = current_element.find_element(By.XPATH, "following-sibling::*[1]")
+products_per_page_element = driver.find_element(By.CLASS_NAME, "vtex-search-result-3-x-showingProductsCount")
+number_of_pages = last_page.text
+products_per_page =  products_per_page_element.text[:2]
 time.sleep(10)
 
 def scroll_to_bottom():
@@ -51,6 +57,7 @@ def scrape_page():
 
 groceries = scrape_page()
 page_count = 1
+print({"number_of_pages": number_of_pages, "products_per_page":products_per_page,"products_scraped": len(groceries), "pages_scraped": page_count}, flush=True)
 while True:
     try:
         # Find the next button (or pagination items)
@@ -73,7 +80,7 @@ while True:
                 driver.execute_script("arguments[0].click();", next_button)
                 
                 groceries.update(scrape_page())
-                print(groceries)
+                print({"number_of_pages": number_of_pages, "products_per_page":products_per_page,"products_scraped": len(groceries), "pages_scraped": page_count}, flush=True)
                 # Scroll to the button and click it
                 found_next_page = True
                 break
